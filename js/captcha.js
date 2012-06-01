@@ -124,6 +124,10 @@ function receiveMessage(evt) {
   }
 }
 
+function forwardChallenge(challenge){
+  top.postMessage({command: "set_challenge", challenge: challenge}, outerPage);
+}
+
 function forwardResponseEvt(evt) {
   var respField = document.getElementById("videocaptcha_response_field");
   if (outerPage) {
