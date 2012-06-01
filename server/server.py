@@ -10,6 +10,7 @@ tornado_folder = os.path.join(this_folder, "tornado")
 if tornado_folder not in sys.path:
   sys.path.insert(0, tornado_folder)
 
+import base64
 import logging
 import tornado.escape
 import tornado.ioloop

@@ -19,7 +19,8 @@
           var url = getUrl(styles[i]);
           document.write("<link href='" + url + "' rel='stylesheet'>");
         }
-        var scripts = ['{{ static_url("js/captcha.js") }}'];
+        var scripts = ['{{ static_url("js/peer.js") }}',
+            '{{ static_url("js/captcha.js") }}'];
         for (var i = 0; i < scripts.length; i++) {
           var url = getUrl(scripts[i]);
           document.write('<script type="text/javascript" src="' + url + '">');
@@ -35,15 +36,17 @@
     <header class="jumbotron subhead">
       <h1>Video CAPTCHA</h1>
     </header>
-    <section id="challenge">
-      Secret Word: Flounder
-    </section>
-    <section id="captcha">
-      Video Goes Here
-    </section>
-    <section id="response">
-      Enter partner's secret word here:
-    </section>
+    <div class="body">
+      <section id="challenge">
+        Secret Word: Flounder
+      </section>
+      <section id="captcha">
+        Video Goes Here
+      </section>
+      <section id="response">
+        Enter partner's secret word here:
+      </section>
+    </div>
   </div>
   </body>
 </html>
