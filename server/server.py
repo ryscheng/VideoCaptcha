@@ -54,75 +54,47 @@ class FrameHandler(tornado.web.RequestHandler):
         self.render("captcha.html")
 
 class MessageHandler(tornado.websocket.WebSocketHandler):
-    waiters = dict()
-    hashes = dict()
-
+    pairs = []
+    singles = []
     
     def allow_draft76(self):
-        # for iOS 5.0 Safari
-        return True
+      # for iOS 5.0 Safari
+      return True
 
     def open(self):
-      self.id = 0
-      self.hashes = []
+      self.partner = None
+      MessageHandler.singles.append(self)
+      self.find_partner()
+
+    def find_partner(self):
+      if self.partner != None:
+        return
+      for node in MessageHandler.singles:
+        if node != self:
+          self.partner = node
+          node.partner = self
+          MessageHandler.singles.remove(self)
+          MessageHandler.singles.remove(node)
+          MessageHandler.pairs.append(self)
+          MessageHandler.pairs.append(node)
+          self.write_message({"event":"Connected"})
+          break
 
     def on_close(self):
-        if self.id:
-          del MessageHandler.waiters[self.id]
-          MessageHandler.send_updates({"from": 0, "id": self.id, "event": "disconnect"});
-          for key in self.hashes:
-            MessageHandler.hashes[key].remove(self.id)
-
-
-    @classmethod
-    def send_updates(cls, chat):
-        logging.info("sending message to %d waiters", len(cls.waiters))
-        for waiter in cls.waiters.values():
-            try:
-                waiter.write_message(chat)
-            except:
-                logging.error("Error sending message", exc_info=True)
+      if self.partner != None:
+        MessageHandler.pairs.remove(self)
+        MessageHandler.pairs.remove(self.partner)
+        self.partner.partner = None
+        MessageHandler.singles.append(self.partner)
+      else:
+        MessageHandler.singles.remove(self)
 
     def on_message(self, message):
-        logging.info("got message %r", message)
-        parsed = tornado.escape.json_decode(message)
-        if "payload" in parsed:
-          if "event" in parsed["payload"] and parsed["payload"]["event"]=="register":
-            # registration.
-            if self.id == 0:
-              self.id = str(uuid.uuid4())
-              MessageHandler.waiters[self.id] = self
-              self.write_message({"id":self.id, "from":0, "event": "register"})
-            else:
-              self.write_message({"id":self.id, "from":0, "event": "register"})
-          elif "event" in parsed["payload"] and parsed["payload"]["event"] == "announce":
-            # handle announces.
-            # todo: rate limiting.
-            if self.id != 0:
-              parsed["payload"]["from"] = self.id
-              MessageHandler.send_updates(parsed["payload"])
-          elif "event" in parsed["payload"] and parsed["payload"]["event"] == "get":
-            if self.id != 0 and "key" in parsed["payload"]:
-              key = parsed["payload"]["key"]
-              if key in MessageHandler.hashes:
-                self.write_message({"from":0, "event":"list", "key":key, "ids":MessageHandler.hashes[key]})
-              else:
-                self.write_message({"from":0, "event":"list", "key":key, "ids":[]})
-          elif "event" in parsed["payload"] and parsed["payload"]["event"] == "set":
-            if self.id != 0 and "key" in parsed["payload"]:
-              key = parsed["payload"]["key"]
-              self.hashes.append(key)
-              if key in MessageHandler.hashes:
-                MessageHandler.hashes[key].append(self.id)
-              else:
-                MessageHandler.hashes[key] = [self.id]
-          else:
-            # direct message.
-            recip_id = parsed["payload"]["to"]
-            if recip_id in MessageHandler.waiters and self.id != 0:
-              parsed["payload"]["from"] = self.id
-              MessageHandler.waiters[recip_id].write_message(parsed["payload"])
-
+      logging.info("got message %r", message)
+      parsed = tornado.escape.json_decode(message)
+      if self.partner != None:
+        #TODO(willscott): Check Message Safety.
+        self.partner.write_message(parsed)
 
 def main():
     tornado.options.parse_command_line()
