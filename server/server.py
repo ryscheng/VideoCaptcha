@@ -125,10 +125,16 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
 
 class VerifyHandler(tornado.web.RequestHandler):
   def get(self):
-    challenge = self.get_argument("challenge")
-    response = self.get_argument("response")
-    clientip = self.get_argument("remoteip")
-    self.write(challenge+":"+response+":"+clientip)
+    challenge = self.get_argument("challenge", None)
+    response = self.get_argument("response", None)
+    clientip = self.get_argument("remoteip", None)
+    if challenge and response and clientip:
+      if MessageHandler.challenges.have(challenge, response):
+        self.write('{result: 0, resultStr: "good to go!"}')
+      else:
+        self.write('{result: -1, resultStr: "wtf, whats with ur verification code?"}')
+    else:
+      self.write('{result: -2, resultStr: "missing parameter"}')
 
 def main():
     tornado.options.parse_command_line()
