@@ -33,6 +33,9 @@ var haveOffer = 0;
 
 var onMessage = function(msg) {
   if (msg.event == "Connected" || msg.event == "Receiving") {
+    var token = msg.token;
+    document.getElementById("videocaptcha_challenge_field").value = token[0];
+    document.getElementById("challengeword").innerHTML = token[1];
     channel = new webkitPeerConnection00(
       'STUN stun.l.google.com:19302',
       function(candidate, more) {
@@ -71,6 +74,8 @@ var onMessage = function(msg) {
     }
     getUserMedia(cb);
   } else if (msg.event == "Disconnected") {
+    document.getElementById("videocaptcha_challenge_field").value = "";
+    document.getElementById("challengeword").innerHTML = "";
     channel = null;
     CaptchaVideo.destroy(null);
   } else if (msg.event == "msg") {
