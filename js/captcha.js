@@ -6,6 +6,26 @@ var showError = function(msg) {
   document.getElementsByClassName('body')[0].innerHTML = el.outerHTML;
 };
 
+var getFailure = function(stream) {
+  console.log("No stream for you!");
+  showError("Did not get stream");
+}
+
+var getUserMedia = function(success) {
+  try {
+    // Old style
+    navigator.webkitGetUserMedia("video,audio", success, getFailure);
+    console.log("Requested access to local media.");
+  } catch (e) {
+    try {
+      navigator.webkitGetUserMedia({video:true, audio:true},
+                                   success, getFailure);
+    } catch (e) {
+      console.log("getUserMedia error: " + e);
+    }
+  }
+}
+
 var channel = null;
 
 var onMessage = function(msg) {
@@ -13,7 +33,6 @@ var onMessage = function(msg) {
     channel = new webkitPeerConnection00(
       'STUN stun.l.google.com:19302',
       function(candidate, more) {
-        console.log("pc callback called : " + candidate);
         if (more==false) {
           console.log('no more candidates - sending offer.');
           peer.write({messageType:'OFFER', sdp:channel.localDescription.toSdp()});
@@ -28,25 +47,29 @@ var onMessage = function(msg) {
     channel.onremovestream = function(stream) {
       console.log('p on remove stream');
     };
-
-    var newOffer;
-    try {
-      newOffer = channel.createOffer('audio,video');
-    } catch (e) {
-      newOffer = channel.createOffer({audio:true, video:true});
-    }
-    channel.setLocalDescription(channel.SDP_OFFER, newOffer);
-    channel.startIce();
+    
+    getUserMedia(function(stream) {
+      channel.addStream(stream);
+      var newOffer;
+      try {
+        newOffer = channel.createOffer('audio,video');
+      } catch (e) {
+        newOffer = channel.createOffer({audio:true, video:true});
+      }
+      channel.setLocalDescription(channel.SDP_OFFER, newOffer);
+      channel.startIce();
+    });
   } else if (msg.event == "Disconnected") {
     channel = null;
-  }
-
-  if (msg.event == "msg") {
-    if (msg.messageType === 'OFFER') {
-      var sdp = new SessionDescription(msg.sdp);
+  } else if (msg.event == "msg") {
+    var payload = msg.payload;
+    if (payload.messageType === 'OFFER') {
+      console.log('got offer');
+      var sdp = new SessionDescription(payload.sdp);
       channel.setRemoteDescription(channel.SDP_OFFER, sdp);
-    } else if (msg.messageType === 'ANSWER') {
-      var sdp = new SessionDescription(msg.sdp);
+    } else if (payload.messageType === 'ANSWER') {
+      console.log('got answer');
+      var sdp = new SessionDescription(payload.sdp);
       channel.setRemoteDescripiton(channel.SDP_ANSWER, sdp);
     }
   }
