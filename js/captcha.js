@@ -74,6 +74,8 @@ var onMessage = function(msg) {
     }
     getUserMedia(cb);
   } else if (msg.event == "Disconnected") {
+    document.getElementById("videocaptcha_challenge_field").value = "";
+    document.getElementById("challengeword").innerHTML = "";
     channel = null;
     CaptchaVideo.destroy(null);
   } else if (msg.event == "msg") {
