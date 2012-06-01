@@ -59,12 +59,12 @@ class FormHandler(tornado.web.RequestHandler):
     response = self.get_argument("videocaptcha_response", None)
     clientip = self.request.remote_ip
     if (challenge and response):
-      http_client = httpclient.HTTPClient()
+      http_client = tornado.httpclient.HTTPClient()
       try:
-        response = http_client.fetch(verify_url+"?challenge="+challenge+"&response="+response+"&remoteip"+clientip)
-        self.write('<html><body>'+response+'</body></html>')
-      except httpclient.HTTPError, e:
-        logging.error("Error: "+e)
+        response = http_client.fetch(verify_url+"?challenge="+challenge+"&response="+response+"&remoteip="+clientip)
+        self.write('<html><body>'+str(response.body)+'</body></html>')
+      except tornado.httpclient.HTTPError, e:
+        logging.error("Error: "+str(e))
         self.write("Error verifying")
     else:
       self.write('Missing either challenge or response')

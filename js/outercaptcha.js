@@ -13,6 +13,9 @@ function receiveMessage(evt) {
   if (evt.data.command == "set_response") {
     var respField = document.getElementById("videocaptcha_response_field");
     respField.value = evt.data.response;
+  } else {
+    var challField = document.getElementById("videocaptcha_challenge_field");
+    challField.value = evt.data.challenge;
   }
 }
 
