@@ -3,7 +3,10 @@ run:
 	python appserver.py &
 
 kill:
-	pkill -f server.py
+	pkill -f "python server.py" &
+	pkill -f "python appserver.py"
 
 status:
-	ps -ef | grep server.py
+	ps -ef | grep "python server.py" | grep -v "grep" &
+	ps -ef | grep "python appserver.py" | grep -v "grep"
+

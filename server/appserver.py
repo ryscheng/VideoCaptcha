@@ -49,7 +49,10 @@ class MainHandler(tornado.web.RequestHandler):
 
 class FormHandler(tornado.web.RequestHandler):
   def get(self):
-    self.render("captcha.html")
+    self.write('<html><body>Success</body></html>')
+
+  def post(self):
+    logging.info(self.request.arguments)
 
 def main():
     tornado.options.parse_command_line()
