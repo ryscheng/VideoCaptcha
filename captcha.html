@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Video CAPTCHA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <script type="text/javascript">
+        /*
+         * This weirdness allows us to handle loading both from
+         * the filesystem, and through the tornado parser.
+         */
+        function getUrl(str) {
+          if (str.indexOf("{" + "{") != 0) return str;
+          return str.match(/\"(.*)\"/)[1];
+        }
+        var styles = ['{{ static_url("css/captcha.css") }}'];
+        for (var i = 0; i < styles.length; i++) {
+          var url = getUrl(styles[i]);
+          document.write("<link href='" + url + "' rel='stylesheet'>");
+        }
+        var scripts = ['{{ static_url("js/captcha.js") }}'];
+        for (var i = 0; i < scripts.length; i++) {
+          var url = getUrl(scripts[i]);
+          document.write('<script type="text/javascript" src="' + url + '">');
+          document.write('<' + '/script>');
+        }
+    </script>
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+  <div class="container">
+    <header class="jumbotron subhead">
+      <h1>Video CAPTCHA</h1>
+    </header>
+    <section id="challenge">
+      Secret Word: Flounder
+    </section>
+    <section id="captcha">
+      Video Goes Here
+    </section>
+    <section id="response">
+      Enter partner's secret word here:
+    </section>
+  </div>
+  </body>
+</html>

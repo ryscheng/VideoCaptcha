@@ -31,6 +31,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", MainHandler),
+            (r"/captcha", FrameHandler),
             (r"/message", MessageHandler),
         ]
 
@@ -45,7 +46,11 @@ class Application(tornado.web.Application):
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("index.html", evaluation=False)
+        self.render("demo.html")
+
+class FrameHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("captcha.html")
 
 class MessageHandler(tornado.websocket.WebSocketHandler):
     waiters = dict()
