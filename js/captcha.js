@@ -48,17 +48,8 @@ var onMessage = function(msg) {
           }
         }
       });
-    channel.onopen = function() {
-      console.log('p on open');
-    };
-    channel.onaddstream = function(stream) {
-      CaptchaVideo.init(stream);
-      console.log('p on stream:');
-    };
-    channel.onremovestream = function(stream) {
-      CaptchaVideo.destroy(stream);
-      console.log('p on remove stream');
-    };
+    channel.onaddstream = CaptchaVideo.init;
+    channel.onremovestream = CaptchaVideo.destroy;
     
     var cb;
     if ( msg.event == "Receiving") {
@@ -81,6 +72,7 @@ var onMessage = function(msg) {
     getUserMedia(cb);
   } else if (msg.event == "Disconnected") {
     channel = null;
+    CaptchaVideo.destroy(null);
   } else if (msg.event == "msg") {
     var payload = msg.payload;
     if (payload.messageType === 'OFFER') {
@@ -107,14 +99,7 @@ var onMessage = function(msg) {
 
 window.addEventListener("message", receiveMessage, false);
 window.addEventListener('load', function() {
-  if (peer.start()) {
-    peer.socket.onopen = function() {
-      console.log("Connected to server.");
-    };
-    peer.socket.onerror = function() {
-      showError("Failed to connect to server.");
-    };
-
+  if(peer.start()) {
     peer.subscribers.push(function(msg) {
       console.log("Server Message received: " + JSON.stringify(msg));
     });

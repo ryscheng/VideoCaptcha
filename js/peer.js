@@ -14,13 +14,21 @@ var peer = {
     if (!window.WebSocket) {
       return false;
     }
-    this.socket = new WebSocket(url);
+    peer.socket = new WebSocket(url);
     var that = this;
-    this.socket.onmessage = function(event) {
+    peer.socket.onmessage = function(event) {
       var msg = JSON.parse(event.data);
         for (var i = 0; i < that.subscribers.length; i++) {
           that.subscribers[i](msg);
         }
+    }
+    peer.socket.onopen = function() {
+      peer.timer && window.clearInterval(peer.timer);
+      console.log('connected to server');
+      peer.socket.onclose = function() {
+        console.log('disconnected from server');
+        peer.timer = window.setInterval(peer.start, 1000);
+      }
     }
 	return true;
   }
