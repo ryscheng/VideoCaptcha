@@ -19,7 +19,7 @@
           var url = getUrl(styles[i]);
           document.write("<link href='" + url + "' rel='stylesheet'>");
         }
-        var scripts = ['{{ static_url("js/demo.js") }}'];
+        var scripts = ['{{ static_url("js/demo.js") }}', '{{ static_url("js/outercaptcha.js") }}'];
         for (var i = 0; i < scripts.length; i++) {
           var url = getUrl(scripts[i]);
           document.write('<script type="text/javascript" src="' + url + '">');
@@ -33,10 +33,20 @@
   <body>
   <div class="container">
     <header class="jumbotron subhead">
-      <h1>Video CAPTCHA</h1>
+      <h1>Sign Up for Email</h1><br>
     </header>
+    <section id="signupform">
+      <table align="center">
+        <tr><td>Name:</td><td><input></td></tr>
+        <tr><td>Email:</td><td><input></td></tr>
+        <tr><td>Password:</td><td><input></td></tr>
+      </table>
+    </section>
     <section id="captcha">
-      Captcha Goes Here.
+        <iframe src="captcha.html"
+                   height="300" width="500" frameborder="0"></iframe><br>
+        <textarea style="display:none" name="videocaptcha_challenge_field" rows="3" cols="40"></textarea>
+        <input name="videocaptcha_response_field">
     </section>
   </div>
   </body>
