@@ -12,6 +12,7 @@ if tornado_folder not in sys.path:
 
 import base64
 import logging
+import random
 import time
 import tornado.escape
 import tornado.ioloop
@@ -58,12 +59,9 @@ class Challenges:
 
   def getWord(self):
     if self.words == None:
-      with open('options.words','r') as f:
-        words = f.readlines()
+      with open(options.words,'r') as f:
+        self.words = f.readlines()
     return random.choice(self.words)    
-
-  def maintain(self):
-    
   
   def makePair(self):
     id_a = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
