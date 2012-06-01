@@ -78,6 +78,7 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
           MessageHandler.pairs.append(self)
           MessageHandler.pairs.append(node)
           self.write_message({"event":"Connected"})
+          self.partner.write_message({"event":"Connected"})
           break
 
     def on_close(self):
@@ -86,15 +87,16 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
         MessageHandler.pairs.remove(self.partner)
         self.partner.partner = None
         MessageHandler.singles.append(self.partner)
+        self.partner.write_message({"event":"Disconnected"})
       else:
         MessageHandler.singles.remove(self)
 
     def on_message(self, message):
       logging.info("got message %r", message)
       parsed = tornado.escape.json_decode(message)
-      if self.partner != None:
+      if "payload" in parsed and self.partner != None:
         #TODO(willscott): Check Message Safety.
-        self.partner.write_message(parsed)
+        self.partner.write_message({"event":"msg", "payload":parsed["payload"]})
 
 def main():
     tornado.options.parse_command_line()
