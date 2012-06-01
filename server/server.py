@@ -12,6 +12,7 @@ if tornado_folder not in sys.path:
 
 import base64
 import logging
+import time
 import tornado.escape
 import tornado.ioloop
 import tornado.options
@@ -27,11 +28,12 @@ default_port = 8081
 if 'PORT' in os.environ:
   default_port = os.environ['PORT']
 define("port", default=default_port, help="port", type=int)
+define("words", default="/usr/share/dict/words", help="word list", type=str)
+
 
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", MainHandler),
             (r"/captcha", FrameHandler),
             (r"/message", MessageHandler),
             (r"/verify", VerifyHandler),
@@ -46,13 +48,36 @@ class Application(tornado.web.Application):
         )
         tornado.web.Application.__init__(self, handlers, **settings)
 
-class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.render("captcha.html")
-
 class FrameHandler(tornado.web.RequestHandler):
     def get(self):
         self.render("captcha.html")
+
+class Challenges:
+  active = dict()
+  words = None
+
+  def getWord(self):
+    if self.words == None:
+      with open('options.words','r') as f:
+        words = f.readlines()
+    return random.choice(self.words)    
+
+  def maintain(self):
+    
+  
+  def makePair(self):
+    id_a = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+    id_b = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
+    word_a = self.getWord()
+    word_b = self.getWord()
+    self.active[id_a] = {"word":word_a, "time":time.time()}
+    self.active[id_b] = {"word":word_b, "time":time.time()}
+    return [[id_a, word_b], [id_b, word_a]]
+
+  def have(self, challenge, word):
+    if challenge in self.active and self.active[challenge]["word"] == word:
+      return 1
+    return 0
 
 class MessageHandler(tornado.websocket.WebSocketHandler):
     pairs = []
@@ -78,8 +103,9 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
           MessageHandler.singles.remove(node)
           MessageHandler.pairs.append(self)
           MessageHandler.pairs.append(node)
-          self.write_message({"event":"Connected"})
-          self.partner.write_message({"event":"Receiving"})
+          tokens = MessageHandler.challenges.makePair()
+          self.write_message({"event":"Connected","token":tokens[0]})
+          self.partner.write_message({"event":"Receiving","token":tokens[1]})
           break
 
     def on_close(self):
@@ -105,6 +131,7 @@ class VerifyHandler(tornado.web.RequestHandler):
 
 def main():
     tornado.options.parse_command_line()
+    MessageHandler.challenges = Challenges()
     app = Application()
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
