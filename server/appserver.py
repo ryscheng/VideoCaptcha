@@ -59,7 +59,11 @@ class FormHandler(tornado.web.RequestHandler):
     response = self.get_argument("videocaptcha_response", None)
     clientip = self.request.remote_ip
     if (challenge and response):
+      logging.info(challenge+":"+response+":"+clientip);
       http_client = tornado.httpclient.HTTPClient()
+      challenge = urllib.quote(challenge)
+      response = urllib.quote(response)
+      clientip = urllib.quote(clientip)
       try:
         response = http_client.fetch(verify_url+"?challenge="+challenge+"&response="+response+"&remoteip="+clientip)
         self.write('<html><body>'+str(response.body)+'</body></html>')

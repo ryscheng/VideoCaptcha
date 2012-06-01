@@ -68,8 +68,8 @@ class Challenges:
     id_b = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
     word_a = self.getWord()
     word_b = self.getWord()
-    self.active[id_a] = {"word":word_a, "time":time.time()}
-    self.active[id_b] = {"word":word_b, "time":time.time()}
+    self.active[id_a] = {"word":word_a.strip(), "time":time.time()}
+    self.active[id_b] = {"word":word_b.strip(), "time":time.time()}
     return [[id_a, word_b], [id_b, word_a]]
 
   def have(self, challenge, word):
@@ -126,9 +126,14 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
 class VerifyHandler(tornado.web.RequestHandler):
   def get(self):
     challenge = self.get_argument("challenge", None)
-    response = self.get_argument("response", None)
+    response = self.get_argument("response", None).strip()
     clientip = self.get_argument("remoteip", None)
     if challenge and response and clientip:
+      challenge = urllib.unquote(challenge)
+      response = urllib.unquote(response)
+      clientip = urllib.unquote(clientip)
+      logging.info(challenge+":"+response+":"+clientip);
+      logging.info(MessageHandler.challenges.active);
       if MessageHandler.challenges.have(challenge, response):
         self.write('{result: 0, resultStr: "good to go!"}')
       else:
