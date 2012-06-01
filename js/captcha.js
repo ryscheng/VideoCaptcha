@@ -74,7 +74,6 @@ var onMessage = function(msg) {
     }
     getUserMedia(cb);
   } else if (msg.event == "Disconnected") {
-    forwardChallenge("");
     document.getElementById("challengeword").innerHTML = "";
     channel = null;
     CaptchaVideo.destroy(null);
