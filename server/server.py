@@ -101,7 +101,10 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
 
 class VerifyHandler(tornado.web.RequestHandler):
   def get(self):
-    self.render("captcha.html")
+    challenge = self.get_argument("challenge")
+    response = self.get_argument("response")
+    clientip = self.get_argument("remoteip")
+    self.write(challenge+":"+response+":"+clientip)
 
 def main():
     tornado.options.parse_command_line()

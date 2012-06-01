@@ -16,6 +16,7 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.websocket
+import tornado.httpclient
 import os.path
 import urllib
 import uuid
@@ -23,6 +24,7 @@ import uuid
 from tornado.options import define, options
 
 default_port = 8080
+verify_url = "http://localhost:8081/verify"
 if 'PORT' in os.environ:
   default_port = os.environ['PORT']
 define("port", default=default_port, help="port", type=int)
@@ -49,10 +51,23 @@ class MainHandler(tornado.web.RequestHandler):
 
 class FormHandler(tornado.web.RequestHandler):
   def get(self):
-    self.write('<html><body>Success</body></html>')
+    self.write('<html><body>What do you want?</body></html>')
 
   def post(self):
     logging.info(self.request.arguments)
+    challenge = self.get_argument("videocaptcha_challenge", None)
+    response = self.get_argument("videocaptcha_response", None)
+    clientip = self.request.remote_ip
+    if (challenge and response):
+      http_client = httpclient.HTTPClient()
+      try:
+        response = http_client.fetch(verify_url+"?challenge="+challenge+"&response="+response+"&remoteip"+clientip)
+        self.write('<html><body>'+response+'</body></html>')
+      except httpclient.HTTPError, e:
+        logging.error("Error: "+e)
+        self.write("Error verifying")
+    else:
+      self.write('Missing either challenge or response')
 
 def main():
     tornado.options.parse_command_line()
