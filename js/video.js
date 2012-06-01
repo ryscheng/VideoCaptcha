@@ -20,5 +20,8 @@ var CaptchaVideo = {
     if (CaptchaVideo.video == stream) {
       CaptchaVideo.video = null;
     }
+    if (CaptchaVideo.el) {
+      document.getElementById("captcha").innerHTML = "Waiting for Peer";
+    }
   }
 };
