@@ -79,7 +79,7 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
           MessageHandler.pairs.append(self)
           MessageHandler.pairs.append(node)
           self.write_message({"event":"Connected"})
-          self.partner.write_message({"event":"Connected"})
+          self.partner.write_message({"event":"Receiving"})
           break
 
     def on_close(self):

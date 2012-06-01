@@ -8,48 +8,98 @@ var showError = function(msg) {
   document.getElementsByClassName('body')[0].innerHTML = el.outerHTML;
 };
 
+var getFailure = function(stream) {
+  console.log("No stream for you!");
+  showError("Did not get stream");
+}
+
+var getUserMedia = function(success) {
+  try {
+    // Old style
+    navigator.webkitGetUserMedia("video,audio", success, getFailure);
+    console.log("Requested access to local media.");
+  } catch (e) {
+    try {
+      navigator.webkitGetUserMedia({video:true, audio:true},
+                                   success, getFailure);
+    } catch (e) {
+      console.log("getUserMedia error: " + e);
+    }
+  }
+}
+
 var channel = null;
+var haveOffer = 0;
 
 var onMessage = function(msg) {
-  if (msg.event == "Connected") {
+  if (msg.event == "Connected" || msg.event == "Receiving") {
     channel = new webkitPeerConnection00(
       'STUN stun.l.google.com:19302',
       function(candidate, more) {
-        console.log("pc callback called : " + candidate);
         if (more==false) {
-          console.log('no more candidates - sending offer.');
-          peer.write({messageType:'OFFER', sdp:channel.localDescription.toSdp()});
+          if (haveOffer == 1) {
+            haveOffer = 2;
+            console.log('finished ice - sending answer.');
+            peer.write({messageType:'ANSWER', sdp:channel.localDescription.toSdp()});                        
+          } else if (haveOffer == 0) {
+            haveOffer = 2;
+            console.log('finished ice - sending offer.');
+            peer.write({messageType:'OFFER', sdp:channel.localDescription.toSdp()});
+          }
         }
       });
     channel.onopen = function() {
       console.log('p on open');
     };
     channel.onaddstream = function(stream) {
-      console.log('p on stream');
+      CaptchaVideo.init(stream);
+      console.log('p on stream:');
     };
     channel.onremovestream = function(stream) {
+      CaptchaVideo.destroy(stream);
       console.log('p on remove stream');
     };
-
-    var newOffer;
-    try {
-      newOffer = channel.createOffer('audio,video');
-    } catch (e) {
-      newOffer = channel.createOffer({audio:true, video:true});
+    
+    var cb;
+    if ( msg.event == "Receiving") {
+      cb = function(stream) {
+        channel.addStream(stream);
+      };
+    } else {
+      cb = function(stream) {
+        channel.addStream(stream);
+        var newOffer;
+        try {
+          newOffer = channel.createOffer('audio,video');
+        } catch (e) {
+          newOffer = channel.createOffer({audio:true, video:true});
+        }
+        channel.setLocalDescription(channel.SDP_OFFER, newOffer);
+        channel.startIce();
+      };
     }
-    channel.setLocalDescription(channel.SDP_OFFER, newOffer);
-    channel.startIce();
+    getUserMedia(cb);
   } else if (msg.event == "Disconnected") {
     channel = null;
-  }
-
-  if (msg.event == "msg") {
-    if (msg.messageType === 'OFFER') {
-      var sdp = new SessionDescription(msg.sdp);
+  } else if (msg.event == "msg") {
+    var payload = msg.payload;
+    if (payload.messageType === 'OFFER') {
+      console.log('got offer');
+      var sdp = new SessionDescription(payload.sdp);
       channel.setRemoteDescription(channel.SDP_OFFER, sdp);
-    } else if (msg.messageType === 'ANSWER') {
-      var sdp = new SessionDescription(msg.sdp);
-      channel.setRemoteDescripiton(channel.SDP_ANSWER, sdp);
+      haveOffer = true;
+      var newAnswer;
+      try {
+        newAnswer = channel.createAnswer(payload.sdp, 'audio,video');
+      } catch (e) {
+        newAnswer = channel.createAnswer(payload.sdp, {audio:true, video:true});
+      }
+      channel.setLocalDescription(channel.SDP_ANSWER, newAnswer);
+      channel.startIce();
+    } else if (payload.messageType === 'ANSWER') {
+      console.log('got answer');
+      var sdp = new SessionDescription(payload.sdp);
+      channel.setRemoteDescription(channel.SDP_ANSWER, sdp);
     }
   }
   var el = document.getElementById('captcha');
