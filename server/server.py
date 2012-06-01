@@ -34,6 +34,7 @@ class Application(tornado.web.Application):
             (r"/", MainHandler),
             (r"/captcha", FrameHandler),
             (r"/message", MessageHandler),
+            (r"/verify", VerifyHandler),
         ]
 
         settings = dict(
@@ -47,7 +48,7 @@ class Application(tornado.web.Application):
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("demo.html")
+        self.render("captcha.html")
 
 class FrameHandler(tornado.web.RequestHandler):
     def get(self):
@@ -97,6 +98,10 @@ class MessageHandler(tornado.websocket.WebSocketHandler):
       if "payload" in parsed and self.partner != None:
         #TODO(willscott): Check Message Safety.
         self.partner.write_message({"event":"msg", "payload":parsed["payload"]})
+
+class VerifyHandler(tornado.web.RequestHandler):
+  def get(self):
+    self.render("captcha.html")
 
 def main():
     tornado.options.parse_command_line()
