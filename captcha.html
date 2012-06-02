@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Video CAPTCHA</title>
+    <title>Live CAPTCHA</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <link href='{{ static_url("css/captcha.css") }}' rel='stylesheet' />
@@ -15,13 +15,12 @@
   </head>
   <body>
   <div class="container">
-    <header class="jumbotron subhead">
-      <h1>Video CAPTCHA</h1>
+    <header class="header">
+      <h1>Humanificator</h1>
     </header>
     <div class="body">
       <section id="challenge">
-        Secret Word:<br> 
-        <pre id="challengeword"></pre>
+        <p>Secret Word:</p><pre id="challengeword"></pre>
       </section>
       <section id="captcha">
         Loading...
