@@ -7,7 +7,6 @@
     <meta name="description" content="">
     <link href='{{ static_url("css/demo.css") }}' rel='stylesheet' />
     <script type="text/javascript" src='{{ static_url("js/demo.js") }}'></script>
-    <script type="text/javascript" src='{{ static_url("js/outercaptcha.js") }}'></script>
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -26,12 +25,9 @@
       </table>
     </section>
     <section id="captcha">
-        <iframe id="captcha_frame" src="http://localhost:8081/captcha"
-                   height="300" width="500" frameborder="0"></iframe><br>
-        <input type="hidden" name="videocaptcha_challenge" id="videocaptcha_challenge_field" />
-        <input type="hidden" name="videocaptcha_response" id="videocaptcha_response_field"/>
-        {{ xsrf_form_html() }}
+        <script type="text/javascript" src='{{ server }}/captcha.js'></script>
     </section>
+    {{ xsrf_form_html() }}
     <input type="submit" name="submit" value="Sign Up" />
     </form>
   </div>

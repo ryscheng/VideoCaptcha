@@ -24,10 +24,10 @@ import uuid
 from tornado.options import define, options
 
 default_port = 8080
-verify_url = "http://localhost:8081/verify"
 if 'PORT' in os.environ:
   default_port = os.environ['PORT']
 define("port", default=default_port, help="port", type=int)
+define("server", default="http://localhost:8081", help="captcha location", type=str)
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -47,7 +47,7 @@ class Application(tornado.web.Application):
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("demo.html")
+        self.render("demo.html", server=options.server)
 
 class FormHandler(tornado.web.RequestHandler):
   def get(self):
@@ -65,6 +65,7 @@ class FormHandler(tornado.web.RequestHandler):
       response = urllib.quote(response)
       clientip = urllib.quote(clientip)
       try:
+        verify_url = options.server + "/verify"
         response = http_client.fetch(verify_url+"?challenge="+challenge+"&response="+response+"&remoteip="+clientip)
         self.write('<html><body>'+str(response.body)+'</body></html>')
       except tornado.httpclient.HTTPError, e:

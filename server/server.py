@@ -35,8 +35,13 @@ define("words", default="/usr/share/dict/words", help="word list", type=str)
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
+            # Top Level Script.
+            (r"/(captcha\.js)", tornado.web.StaticFileHandler, {"path":os.path.join(os.path.dirname(__file__), "..","js")}),
+            # The iFrame.
             (r"/captcha", FrameHandler),
+            # Server Communication.
             (r"/message", MessageHandler),
+            # Verification.
             (r"/verify", VerifyHandler),
         ]
 
