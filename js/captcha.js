@@ -1,25 +1,47 @@
 (function(){
 
-window.addEventListener("message", receiveMessage, false);
+var instanceId = "captcha" + Math.random();
+
 window.addEventListener('load', function() {
-  var captcha_frame = document.getElementById("captcha_frame");
-  captcha_frame.contentWindow.postMessage({
-    command: "set_containing_page", 
-    uri: window.location.href,
-  }, captcha_frame.src);
+  var captcha_frame = document.getElementById(instanceId);
+  var script = captcha_frame.previousSibling;
+  var settings = {
+    challenge: "challenge",
+    response: "response"
+  };
+  var url;
+  try {
+    url = script.src.substr(0, script.src.indexOf("captcha.js"));
+    var settings = JSON.parse(script.innerText);
+  } catch(e) {
+    console.warn("Could not load settings");
+  }
+  captcha_frame.src = url + "captcha";
+  captcha_frame.addEventListener('load', function() {
+    captcha_frame.contentWindow.postMessage({
+      command: "set_containing_page", 
+      uri: window.location.href,
+    }, captcha_frame.src);
+  }, false);
+
+  var challenge = document.createElement("input");
+  challenge.type = "hidden";
+  challenge.name = settings.challenge;
+  var response = document.createElement("input");
+  response.type = "hidden";
+  response.name = settings.response;
+  var onReceive = function(evt) {
+    if (evt.data.command == "set_response") {
+      response.value = evt.data.response;
+    } else {
+      challenge.value = evt.data.challenge;
+    }
+  }
+  window.addEventListener("message", onReceive, false);
+  captcha_frame.parentNode.appendChild(challenge);
+  captcha_frame.parentNode.appendChild(response);
 });
 
-function receiveMessage(evt) {
-  if (evt.data.command == "set_response") {
-    var respField = document.getElementById("videocaptcha_response_field");
-    respField.value = evt.data.response;
-  } else {
-    var challField = document.getElementById("videocaptcha_challenge_field");
-    challField.value = evt.data.challenge;
-  }
-}
 
-document.write('<iframe id="captcha_frame" src="http://localhost:8081/captcha" height="300" width="500" frameborder="0"></iframe><br>');
-document.write('<input type="hidden" name="videocaptcha_challenge" id="videocaptcha_challenge_field" />');
-document.write('<input type="hidden" name="videocaptcha_response" id="videocaptcha_response_field"/>');
+document.write('<iframe id="' + instanceId + '" height="300" width="500" frameborder="0"></iframe>');
 })();

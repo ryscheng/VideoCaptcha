@@ -25,7 +25,9 @@
       </table>
     </section>
     <section id="captcha">
-        <script type="text/javascript" src='{{ server }}/captcha.js'></script>
+        <script type="text/javascript" src='{{ server }}/captcha.js'>
+        {"challenge":"videocaptcha_challenge", "response":"videocaptcha_response"}
+        </script>
     </section>
     {{ xsrf_form_html() }}
     <input type="submit" name="submit" value="Sign Up" />
