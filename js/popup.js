@@ -114,6 +114,7 @@ window.addEventListener('load', function() {
   //Set the response forwarder
   var respField = document.getElementById("videocaptcha_response_field");
   respField.addEventListener("keyup", forwardResponseEvt);
+  document.body.addEventListener("DOMSubtreeModified", forwardHeight, false);
 }, false);
 
 function receiveMessage(evt) {
@@ -125,6 +126,16 @@ function receiveMessage(evt) {
 
 function forwardChallenge(challenge){
   top.postMessage({command: "set_challenge", challenge: challenge}, outerPage);
+}
+
+var height = 0;
+function forwardHeight() {
+  var newHeight = document.body.clientHeight;
+  if (newHeight != height) {
+    height = newHeight;
+    console.log('height now ' + height);
+    top.postMessage({command: "set_height", height: (height + 20) + "px"}, outerPage);
+  }
 }
 
 function forwardResponseEvt(evt) {
